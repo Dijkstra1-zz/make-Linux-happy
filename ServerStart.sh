@@ -69,7 +69,7 @@ while true ; do
         exit 0
     fi
     if [ ! -f auto_restart ]; then
-        echo "Stopping Server..."
+        echo "Stopping Server"
         exit 0
     fi
     echo "Press Ctrl+C before the time runs out to safely stop the server!"
