@@ -1,8 +1,24 @@
-#Script by Dijkstra
+#### Minecraft-Forge Server install/launcher script
+#### Linux Version
+#### Created by: "Dijkstra" 
+####
+#### Originally created for use in "All The Mods" modpacks
+####
+#### This script will fetch the appropriate forge installer
+#### and run it to install forge AND fetch Minecraft (from Mojang)
+#### If Forge and Minecraft are already installed it will skip
+#### download/install and launch server directly (with 
+#### auto-restart-after-crash logic as well)
+####
+#### IF THERE ARE ANY ISSUES
+#### Please make a report on the AllTheMods github:
+#### https://github.com/whatthedrunk/allthemods/issues
+####
+#### or come find us on Discord: https://discord.gg/FdFDVWb
+#### 
 #!/bin/sh
 
 #For Server Owners
-export MIN_RAM="1G"
 export MAX_RAM="5G"
 export FORGE_JAR="forge.jar"
 export JAVA_ARGS="-server -XX:+DisableExplicitGC -XX:+UseConcMarkSweepGC -XX:MaxTenuringThreshold=15 -XX:MaxGCPauseMillis=30 -XX:-UseGCOverheadLimit -XX:+UseBiasedLocking -XX:SurvivorRatio=8 -XX:TargetSurvivorRatio=90 -XX:+UseCompressedOops -XX:+OptimizeStringConcat -XX:+AggressiveOpts -XX:ReservedCodeCacheSize=2048m -XX:+UseCodeCacheFlushing -XX:SoftRefLRUPolicyMSPerMB=20000"
@@ -19,7 +35,7 @@ export FORGEURL="DISABLE"
 
 install_server(){
     if [ -f installer.jar ]; then
-		echo "Found Server Installer No need to download one"
+		echo "Found Server Installer JAR, no need to download again"
     else
         if [ "${FORGEURL}" == "DISABLE" ]; then
             export URL="http://files.minecraftforge.net/maven/net/minecraftforge/forge/${MCVER}-${FORGEVER}/forge-${MCVER}-${FORGEVER}-installer.jar"
@@ -40,70 +56,71 @@ install_server(){
     fi
     
 	if [ ! -f installer.jar ]; then
-		echo "Server not installed"
+		echo "Forge installer did not download"
 		exit 0
 	else
-		echo "Installing Server"
+		echo "Installing Forge Server"
 		java -jar installer.jar --installServer
-		echo "Deleting installer"
+		echo "Deleting Forge installer (no longer needed)"
 		rm installer.jar
-		rm installer.jar.log
-		echo "Setting jar name"
+		#rm installer.jar.log
+		echo "Renaming forge JAR"
 		mv "forge-${MCVER}-${FORGEVER}-universal.jar" ${FORGE_JAR}
 	fi
 }
 
 start_server() {
     echo "Starting server"
-    java -Xms${MIN_RAM} -Xmx${MAX_RAM} ${JAVA_ARGS} -jar ${FORGE_JAR} nogui
+    java -Xmx${MAX_RAM} ${JAVA_ARGS} -jar ${FORGE_JAR} nogui
 }
 
-check_if_temp(){
-    echo "$(pwd)"
-    if [ "$(pwd)" == "/tmp" ] || [ "$(pwd)" == "/var/tmp" ]; then
-        echo "Should not be run from temp"
-        if [ ${RUN_FROM_BAD_FOLDER} -eq 0 ]; then
-            echo "@Ordinator Erro mesaage here :P"
-            exit 0
-        else
-            echo "bad choice message"
-        fi
-    fi
-}
 
 check_dir(){
-    if [ ! -r . ] || [ ! -w . ]; then 
-        echo "You do not have full access to folder"
+    echo "$(pwd)"
+    if [ "$(pwd)" == "/tmp" ] || [ "$(pwd)" == "/var/tmp" ]; then
+		echo "Current directory appears to be TMP"
         if [ ${RUN_FROM_BAD_FOLDER} -eq 0 ]; then
-            echo "@Ordinator Error mesaage here :P"
+            echo "RUN_FROM_BAD_FOLDER setting is off, exiting script"
             exit 0
         else
-            echo "Bad choice  message"
+            echo "Bypassing cd=temp halt per script settings"
+        fi
+    fi
+
+
+    if [ ! -r . ] || [ ! -w . ]; then 
+        echo "You do not have full access to current directory"
+        if [ ${RUN_FROM_BAD_FOLDER} -eq 0 ]; then
+            echo "RUN_FROM_BAD_FOLDER setting is off, exiting script"
+            exit 0
+        else
+            echo "Bypassing cd access-restriction halt per script settings"
         fi
     fi
 }
 
-check_connection(){
-    
-    if ping -c 1 allthepacks.com >> /dev/null 2>&1; then
-        echo "Wow internet connection"
-    else
-        echo "Failed frist lets try another one Pls changes these bad messages @Ordinator"
 
-        if ping -c 1 google.com >> /dev/null 2>&1; then
-            echo "Wow internet connection"
-        else
-            if [ ${IGNORE_OFFLINE} -eq 0 ]; then
-                echo "@Ordinator Error mesaage here :P"
-                exit 0
-            else
-                echo "Bad choice  message"
-            fi
-        fi  
+check_connection(){
+	if [ ${IGNORE_OFFLINE} -eq 1 ]; then
+		echo "Skipping internet connectivity check"
+	else
+		if ping -c 1 8.8.8.8 >> /dev/null 2>&1; then
+			echo "Ping to Google DNS successfull"
+		else
+			echo "Ping to Google DNS failed. No internet access?"
+			exit 0
+		fi
+
+        if ping -c 1 4.2.2.1 >> /dev/null 2>&1; then
+            echo "Ping to L4 successfull"
+		else
+			echo "Ping to L4 failed. No internet access?"
+			exit 0
+		fi
     fi
 }
 
-check_if_temp
+
 check_dir
 check_connection
 
@@ -144,7 +161,7 @@ while true ; do
     echo "Press Ctrl+C before the time runs out to safely stop the server!"
     for i in 10 9 8 7 6 5 4 3 2 1; do
         echo "Restarting server in $i"
-        sleep 1
+        sleep 1.1
     done
     echo "Rebooting now!"
-done
+done 
