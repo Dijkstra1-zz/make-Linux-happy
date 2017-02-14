@@ -194,17 +194,17 @@ check_connection(){
 
 # routine to make sure necessary binaries are found
 check_binaries(){
-	if [ ! -f ${FORGE_JAR} ] ; then
+	if [ ! -f ${FORGE_JAR} ]; then
 		echo "WARN: ${FORGE_JAR} not found"  >>serverstart.log 2>&1
 		echo "Required files not found, need to install Forge"
 		install_server
 	fi
-	if [ ! -f ./minecraft_server.${MCVER}.jar ] ; then
+	if [ ! -f ./minecraft_server.${MCVER}.jar ]; then
 		echo "WARN: minecraft_server.${MCVER}.jar not found" >>serverstart.log 2>&1
 		echo "Required files not found, need to install Forge"
 		install_server
 	fi
-	if [ ! -d ./libraries ] ; then
+	if [ ! -d ./libraries ]; then
 		echo "WARN: library directory not found" >>serverstart.log 2>&1
 		echo "Required files not found, need to install Forge"
 		install_server
